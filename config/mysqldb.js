@@ -1,22 +1,15 @@
-const mysql = require('mysql2');
 require('dotenv').config();
 
-let db = null;
-let client = null;
+const sequelize = require('sequelize');
 
-const getDb = async () => {
-    try {
-        client = mysql.createConnection({
-            host: process.env.HOST,
-            user: process.env.USER,
-            password: process.env.SECRET,
-            database: process.env.DATABASE
-        });
-        db = client;
-    } catch (error) {
-        console.error(error);
+const db = new sequelize(
+    process.env.DATABASE,
+    process.env.USER,
+    process.env.SECRET, {
+        host: process.env.HOST,
+        dialect: 'mysql',
+        port: process.env.PORT
     }
-    return db;
-}
+);
 
-module.exports = { getDb };
+module.exports = db;

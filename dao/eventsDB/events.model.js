@@ -1,6 +1,10 @@
 const sequelize = require('sequelize');
 const db = require('../../config/mysqldb');
-const Users = db.define(
+
+const User = require('../users/user.model');
+const userModel = new User();
+
+const Events = db.define(
     "users", {
         idUser: {
             type: sequelize.INTEGER,
@@ -26,10 +30,6 @@ const Users = db.define(
             allowNull: false,
             unique: true
         },
-        password: {
-            type: sequelize.STRING(250),
-            allowNull: false
-        },
         idPost: {
             type: sequelize.INTEGER,
             allowNull: false,
@@ -43,4 +43,4 @@ const Users = db.define(
         timestamps: false
     },
 );
-module.exports = Users;
+module.exports = Events;

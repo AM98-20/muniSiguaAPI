@@ -23,7 +23,7 @@ const userSignUpSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-    email: email.required(),
+    username: username.required(),
     password: password.required()
 });
 

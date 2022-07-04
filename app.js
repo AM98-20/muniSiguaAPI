@@ -7,35 +7,33 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const { logErrors, errorHandler, boomErrorHandler } = require('./middlewares/error.handler');
 const {passport} = require('./config/jwt.strategy');
-const cors = require('cors');
+//const cors = require('cors');
 
-const whiteList = (process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
+//const whiteList = (process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
 
-const corsOptions = {
-  origin: (origin, callback)=>{
-    if (whiteList.indexOf(origin) >= 0){
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed'));
-    }
-  }
-}
+// const corsOptions = {
+//   origin: (origin, callback)=>{
+//     if (whiteList.indexOf(origin) >= 0){
+//       callback(null, true);
+//     } else {
+//       callback(new Error('CORS not allowed'));
+//     }
+//   }
+// }
 
 var indexRouter = require('./routes/index');
-//var usersRouter = require('./routes/users');
 
 var app = express();
 app.use(passport.initialize());
 
 app.use(logger('dev'));
-app.use(cors(corsOptions));
+//app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-//app.use('/users', usersRouter);
 
 // error handler
 /*app.use(function(err, req, res, next) {

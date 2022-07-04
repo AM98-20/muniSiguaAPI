@@ -3,9 +3,6 @@ require('dotenv').config();
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const boom = require('@hapi/boom');
-const multer = require('multer');
-
-const upload = multer();
 
 //Validation
 const validatorHandler = require('../../../../middlewares/validator.handler');
@@ -13,9 +10,9 @@ const { userSignUpSchema, loginSchema } = require('../../../../schemas/auth.sche
 
 //Models
 const User = require('../../../../dao/user/user.model');
-const userModel = new User();
 
 //Utils
+const { Op } = require('sequelize');
 const { hashPassword, comparePassword } = require('../../../../utils/encryption.utils');
 
 router.post('/user-signup',
@@ -24,31 +21,44 @@ router.post('/user-signup',
         try {
             const data = req.body;
 
-            const insertData = {
-                username: data.username,
-                name: data.name,
-                surname: data.surname,
-                email: data.email,
-                password: await hashPassword(data.password),
-                idPost: data.idPost,
-                userState: true
-            }
-            const result = userModel.newItem(insertData);
-
-            const payload = {
-                userId: result.insertId,
-                username: data.username,
-                userType: data.idPost,
-                email: data.email
-            }
-
-            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-            console.log(accessToken);
-            res.status(200).json({
-                status: 'success',
-                result,
-                accessToken
+            const buscarUsuario = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        { username: data.username }
+                    ]
+                }
             });
+            if (!buscarUsuario) {
+                const UsuarioNuevo = User.create({
+                    username: data.username,
+                    name: data.name,
+                    surname: data.surname,
+                    email: data.email,
+                    password: await hashPassword(data.password),
+                    idPost: data.idPost,
+                    state: data.state
+                }).then((result) => {
+                    const payload = {
+                        userId: result.insertId,
+                        username: data.username,
+                        name: data.name,
+                        surname: data.surname,
+                        email: data.email,
+                        idPost: data.idPost
+                    }
+                    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
+                    console.log(accessToken);
+                    res.status(200).json({
+                        status: 'success',
+                        result,
+                        accessToken
+                    });
+                });
+            }else{
+                res.status(500).json({
+                    status: 'error'
+                });
+            }
         } catch (error) {
             next(error);
         }
@@ -61,7 +71,13 @@ router.post('/login',
         try {
             const { username, password } = req.body;
 
-            const user = await userModel.findByEmail(username);
+            const user = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        { username: username }
+                    ]
+                }
+            });
 
             if (!user || user.state === 0) {
                 throw boom.unauthorized();
@@ -74,13 +90,16 @@ router.post('/login',
             }
 
             const payload = {
-                userId: user._id,
-                idPost: user.idPost,
+                idUser: user.id,
+                username: user.username,
+                name: user.name,
+                surname: user.surname,
                 email: user.email,
-                username: user.username
+                idPost: user.idPost,
+                state: user.state
             }
 
-            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
             delete user.password;
 
             res.status(200).json({
@@ -94,8 +113,10 @@ router.post('/login',
     }
 );
 
-router.post('/logout');
+router.put('/logout');
 
 router.put('/update-pass');
+
+router.put('/refresh-token');
 
 module.exports = router;
