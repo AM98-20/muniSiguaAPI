@@ -1,20 +1,24 @@
 const Joi = require('joi');
 //Types
-const id = Joi.string();
+const id = Joi.number();
 const eventName = Joi.string();
 const eventDescription = Joi.string();
-const eventStatus = Joi.string().valid(true, false);
 const eventDate = Joi.date().valid('yyyy-mm-dd');
 const eventPusblishedDate = Joi.date().valid('yyyy-mm-dd');
+const eventState = Joi.string().valid(true, false);
+const idPublisher = Joi.number();
+const imgPortada = Joi.string();
 
 const generalString = Joi.string();
 
 const createEventSchema = Joi.object({
     eventName: eventName.required(),
     eventDescription: eventDescription.required(),
-    eventStatus: eventStatus.required(),
     eventDate: eventDate.required(),
-    eventPusblishedDate: eventPusblishedDate.required()
+    eventPusblishedDate: eventPusblishedDate.required(),
+    eventState: eventState.required(),
+    idPublisher: idPublisher.required(),
+    imgPortada: imgPortada.required()
 });
 
 const requiredIdEventSchema = Joi.object({
@@ -22,11 +26,14 @@ const requiredIdEventSchema = Joi.object({
 });
 
 const updateEventSchema = Joi.object({
-    eventName,
-    eventDescription,
-    eventStatus,
-    eventDate,
-    eventPusblishedDate
+    id: id.required(),
+    eventName: eventName.required(),
+    eventDescription: eventDescription.required(),
+    eventDate: eventDate.required(),
+    eventPusblishedDate: eventPusblishedDate.required(),
+    eventState: eventState.required(),
+    idPublisher: idPublisher.required(),
+    imgPortada: imgPortada.required()
 });
 
 const searchSchema = Joi.object({

@@ -7,11 +7,6 @@ const Strategy = passportJWT.Strategy;
 
 const secretAccessKey = process.env.JWT_SECRET;
 
-const options = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: secretAccessKey
-};
-
 //Passport Strategy for authentication using jwt
 const JWTStrategy = new Strategy({
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

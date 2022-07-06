@@ -7,7 +7,6 @@ const boom = require('@hapi/boom');
 //Validation
 const validatorHandler = require('../../../../middlewares/validator.handler');
 const { userSignUpSchema, loginSchema } = require('../../../../schemas/auth.schema');
-const { jwtMiddleware } = require('../../../../config/jwt.strategy');
 
 //Models
 const User = require('../../../../dao/user/user.model');
@@ -17,16 +16,12 @@ const { Op } = require('sequelize');
 const { hashPassword, comparePassword } = require('../../../../utils/encryption.utils');
 
 router.post('/user-signup',
-    jwtMiddleware,
     validatorHandler(userSignUpSchema, 'body'),
     async (req, res, next) => {
         try {
             const data = req.body;
 
             const buscarUsuario = await User.findOne({
-                attributes: [
-                    'username'
-                ],
                 where: {
                     [Op.or]: [
                         { username: data.username }
@@ -55,7 +50,7 @@ router.post('/user-signup',
                         email: data.email,
                         idPost: data.idPost
                     }
-                    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '0.03h' });
+                    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
                     console.log(accessToken);
                     res.status(200).json({
                         status: 'success',
@@ -81,9 +76,6 @@ router.post('/login',
             const { username, password } = req.body;
 
             const user = await User.findOne({
-                attributes: [
-                    'idUser', 'username', 'name', 'surname', 'email', 'password', 'idPost', 'state'
-                ],
                 where: {
                     username: username,
                     state: 1
@@ -110,7 +102,7 @@ router.post('/login',
                 state: user.state
             }
 
-            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '0.03h' });
+            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
             delete user.password;
 
             res.status(200).json({
@@ -124,9 +116,7 @@ router.post('/login',
     }
 );
 
-router.put('/update-pass',
-    jwtMiddleware
-);
+router.put('/update-pass');
 
 router.put('/refresh-token');
 

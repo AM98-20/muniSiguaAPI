@@ -6,14 +6,14 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const { logErrors, errorHandler, boomErrorHandler } = require('./middlewares/error.handler');
-const {passport} = require('./config/jwt.strategy');
-//const cors = require('cors');
+const { passport } = require('./config/jwt.strategy');
+// const cors = require('cors');
 
-//const whiteList = (process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
-
+// const whiteList = ['http://localhost:3001', 'http://192.0.0.103:3001', 'http://127.0.0.1:3001']//(process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
+// console.log(whiteList);
 // const corsOptions = {
-//   origin: (origin, callback)=>{
-//     if (whiteList.indexOf(origin) >= 0){
+//   origin: (origin, callback) => {
+//     if (whiteList.indexOf(origin) !== -1) {
 //       callback(null, true);
 //     } else {
 //       callback(new Error('CORS not allowed'));
@@ -49,8 +49,8 @@ app.use(logErrors);
 app.use(boomErrorHandler);
 app.use(errorHandler);
 
-app.use('*', function(req, res){
-    res.status(404).json({status: 'failed', msg: "Route not found"});
+app.use('*', function (req, res) {
+  res.status(404).json({ status: 'failed', msg: "Route not found" });
 });
 
 module.exports = app;

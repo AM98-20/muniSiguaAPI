@@ -1,5 +1,6 @@
 const sequelize = require('sequelize');
 const db = require('../../config/mysqldb');
+const Posts = require('./post.model');
 const Users = db.define(
     "users", {
         idUser: {
@@ -43,4 +44,8 @@ const Users = db.define(
         timestamps: false
     },
 );
+
+Posts.hasOne(Users, { foreignKey: 'idPost' });
+Users.belongsTo(Posts, { foreignKey: 'idUser' });
+
 module.exports = Users;
