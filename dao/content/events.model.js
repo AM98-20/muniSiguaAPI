@@ -1,5 +1,5 @@
 const sequelize = require('sequelize');
-const User = required('../../user.model');
+const Users =require('../user/user.model');
 const db = require('../../config/mysqldb');
 const Events = db.define(
     "events", {
@@ -23,28 +23,27 @@ const Events = db.define(
         },
         publishedDate: {
             type: sequelize.DATEONLY,
-            allowNull: false,
-            unique: true
+            allowNull: true
         },
         eventStatus: {
-            type: sequelize.ENUM,
+            type: sequelize.ENUM('CNLD', 'FNLD', 'PRXM'),
             allowNull: false,
+        },
+        idPublisher: {
+            type: sequelize.INTEGER,
+            allowNull: true,
         },
         imgPortada: {
             type: sequelize.STRING(250),
             allowNull: false
-        },
-        idUser: {
-            type: sequelize.INTEGER,
-            allowNull: true,
         }
     }, {
-        tableName: "users",
+        tableName: "events",
         timestamps: false
     },
 );
 //user-event relation
-User.hasOne(Events, { foreignKey: 'idUser' });
-Events.belongsTo(User, { foreignKey: 'idUser' });
+Events.hasOne(Users, { foreignKey: 'idUser' });
+Users.belongsTo(Events, { foreignKey: 'idPublisher' });
 
 module.exports = Events;

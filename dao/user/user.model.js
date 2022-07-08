@@ -46,6 +46,6 @@ const Users = db.define(
 );
 
 Posts.hasOne(Users, { foreignKey: 'idPost' });
-Users.belongsTo(Posts, { foreignKey: 'idUser' });
+Users.belongsTo(Posts, { foreignKey: 'idPost' });
 
 module.exports = Users;

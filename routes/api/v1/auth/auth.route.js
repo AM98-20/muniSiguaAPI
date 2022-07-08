@@ -91,7 +91,11 @@ router.post('/login',
             });
 
             if (!user || user.state === 0) {
-                throw boom.unauthorized();
+                if (user) {
+                    throw boom.forbidden();
+                }else{
+                    throw boom.notAcceptable();
+                }
             }
 
             const isMatch = await comparePassword(password, user.password);
@@ -110,7 +114,7 @@ router.post('/login',
                 state: user.state
             }
 
-            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '0.03h' });
+            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '0.5h' });
             delete user.password;
 
             res.status(200).json({

@@ -7,19 +7,19 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const { logErrors, errorHandler, boomErrorHandler } = require('./middlewares/error.handler');
 const { passport } = require('./config/jwt.strategy');
-// const cors = require('cors');
+const cors = require('cors');
 
-// const whiteList = ['http://localhost:3001', 'http://192.0.0.103:3001', 'http://127.0.0.1:3001']//(process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
-// console.log(whiteList);
-// const corsOptions = {
-//   origin: (origin, callback) => {
-//     if (whiteList.indexOf(origin) !== -1) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('CORS not allowed'));
-//     }
-//   }
-// }
+const whiteList = (process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
+//console.log(whiteList);
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whiteList.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  }
+}
 
 var indexRouter = require('./routes/index');
 
@@ -27,7 +27,7 @@ var app = express();
 app.use(passport.initialize());
 
 app.use(logger('dev'));
-//app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -35,16 +35,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 
-// error handler
-/*app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});*/
 app.use(logErrors);
 app.use(boomErrorHandler);
 app.use(errorHandler);

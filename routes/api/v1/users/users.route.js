@@ -2,24 +2,32 @@ require('dotenv').config();
 
 const router = require('express').Router();
 
-const { jwtMiddleware } = require('../../../../config/jwt.strategy');
-const boom = require('@hapi/boom');
-//Models
-const User = require('../../../../dao/user/user.model');
+//validation
 const { updateSchema, requiredIdSchema } = require('../../../../schemas/auth.schema');
 const validatorHandler = require('../../../../middlewares/validator.handler');
+const { jwtMiddleware } = require('../../../../config/jwt.strategy');
+const boom = require('@hapi/boom');
+
+//Models
+const User = require('../../../../dao/user/user.model');
+const Posts = require('../../../../dao/user/post.model');
 
 router.get('/all_users',
     jwtMiddleware,
     async (req, res, next) => {
         try {
             const users = await User.findAll({
+                include: [{
+                    model: Posts,
+                    attributes: ['postDesc']
+                }
+                ],
                 attributes: [
-                    'idUser', 'username', 'name', 'surname', 'email', 'idPost', 'state'
+                    'idUser', 'username', 'name', 'surname', 'email', 'state'
                 ]
             });
-            if (!buscarUsuario) {
-                throw boom.unauthorized();
+            if (!users) {
+                throw boom.notAcceptable();
             }
 
             res.status(200).json({
@@ -39,6 +47,11 @@ router.get('/one_user',
         const { id } = req.body;
         try {
             const user = await User.findOne({
+                include: [{
+                    model: Posts,
+                    attributes: ['postDesc']
+                }
+                ],
                 attributes: [
                     'idUser', 'username', 'name', 'surname', 'email', 'idPost', 'state'
                 ],
@@ -46,8 +59,8 @@ router.get('/one_user',
                     idUser: id
                 }
             });
-            if (!buscarUsuario) {
-                throw boom.unauthorized();
+            if (!user) {
+                throw boom.notAcceptable();
             }
 
             res.status(200).json({
@@ -59,7 +72,7 @@ router.get('/one_user',
     }
 );
 
-router.post('/edit_user',
+router.put('/edit_user',
     jwtMiddleware,
     validatorHandler(updateSchema, 'body'),
     async (req, res, next) => {
@@ -73,17 +86,24 @@ router.post('/edit_user',
                     idUser: data.id
                 }
             });
-            if (!buscarUsuario) {
-                throw boom.unauthorized();
+
+            if (!users) {
+                throw boom.notAcceptable();
             }
+
             try {
                 users.username = data.username;
                 users.name = data.name;
                 users.surname = data.surname;
                 users.email = data.email;
                 users.idPost = data.idPost;
-                users.state = data.state;
-                await users.save();
+                users.state = data.userState;
+                await users.save().then((result) => {
+                    res.status(200).json({
+                        status: 'success',
+                        result
+                    })
+                });
             } catch (error) {
                 res.status(500).json({
                     status: 'error',
@@ -110,8 +130,8 @@ router.delete('/delete_user',
                     idUser: id
                 }
             });
-            if (!buscarUsuario) {
-                throw boom.unauthorized();
+            if (!users) {
+                throw boom.notAcceptable();
             }
 
             await User.destroy({

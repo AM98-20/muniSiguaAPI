@@ -9,7 +9,7 @@ const email = Joi.string().email();
 const password = Joi.string().min(6);
 const confirmPassword = Joi.valid(Joi.ref('password'));
 const idPost = Joi.string();
-const state = Joi.boolean();
+const state = Joi.number();
 
 const userSignUpSchema = Joi.object({
     username: username.required(),

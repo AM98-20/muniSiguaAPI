@@ -1,123 +1,188 @@
 require('dotenv').config();
 
 const router = require('express').Router();
-const jwt = require('jsonwebtoken');
+
+//validation
+const { createEventSchema, updateEventSchema, requiredIdEventSchema } = require('../../../../schemas/events.schema');
+const validatorHandler = require('../../../../middlewares/validator.handler');
+const { jwtMiddleware } = require('../../../../config/jwt.strategy');
 const boom = require('@hapi/boom');
 
-//Validation
-const validatorHandler = require('../../../../middlewares/validator.handler');
-const { userSignUpSchema, loginSchema } = require('../../../../schemas/auth.schema');
-
 //Models
-const User = require('../../../../dao/user/user.model');
+const Users = require('../../../../dao/user/user.model');
+const Posts = require('../../../../dao/user/post.model');
+const Events = require('../../../../dao/content/events.model');
 
-//Utils
-const { Op } = require('sequelize');
-const { hashPassword, comparePassword } = require('../../../../utils/encryption.utils');
+router.get('/all_events',
+    async (req, res, next) => {
+        try {
+            const events = await Events.findAll({
+                include: [{
+                    model: Users,
+                    attributes: ['username', 'name', 'surname']
+                }
+                ],
+                attributes: [
+                    'idEvent', 'eventName', 'eventDescription', 'eventDate', 'publishedDate', 'eventStatus', 'idPublisher', 'imgPortada'
+                ]
+            });
+            if (!events) {
+                throw boom.notAcceptable();
+            }
 
-router.post('/user-signup',
-    validatorHandler(userSignUpSchema, 'body'),
+            res.status(200).json({
+                events
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+router.get('/one_event',
+    validatorHandler(requiredIdEventSchema, 'body'),
+    async (req, res, next) => {
+        const { id } = req.body;
+        try {
+            const events = await Events.findAll({
+                include: [{
+                    model: Users,
+                    attributes: ['username', 'name', 'surname']
+                }
+                ],
+                attributes: [
+                    'idEvent', 'eventName', 'eventDescription', 'eventDate', 'publishedDate', 'eventStatus', 'idPublisher', 'imgPortada'
+                ],
+                where: [{
+                    idEvent: id
+                }]
+            });
+            if (!events) {
+                throw boom.notAcceptable();
+            }
+
+            res.status(200).json({
+                events
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+router.post('/add_event',
+    jwtMiddleware,
+    validatorHandler(createEventSchema, 'body'),
     async (req, res, next) => {
         try {
             const data = req.body;
 
-            const buscarUsuario = await User.findOne({
-                where: {
-                    [Op.or]: [
-                        { username: data.username }
-                    ]
-                }
+            const event = Events.create({
+                eventName: data.eventName,
+                eventDescription: data.eventDescription,
+                eventDate: data.eventDate,
+                publishedDate: data.eventPusblishedDate,
+                eventStatus: data.eventState,
+                idPublisher: data.idPublisher,
+                imgPortada: data.imgPortada
+            }).then((result) => {
+                res.status(200).json({
+                    status: 'success',
+                    result
+                });
+            }).catch(error => {
+                throw boom.conflict(error);
             });
-            if (buscarUsuario) {
-                throw boom.unauthorized();
+
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+router.put('/edit_event',
+    jwtMiddleware,
+    validatorHandler(updateEventSchema, 'body'),
+    async (req, res, next) => {
+        const data = req.body;
+        try {
+            const event = await Events.findOne({
+                where: [{
+                    idEvent: data.id
+                }]
+            });
+
+            if (!event) {
+                throw boom.notAcceptable();
             }
 
-            if (!buscarUsuario) {
-                const UsuarioNuevo = User.create({
-                    username: data.username,
-                    name: data.name,
-                    surname: data.surname,
-                    email: data.email,
-                    password: await hashPassword(data.password),
-                    idPost: data.idPost,
-                    state: data.state
-                }).then((result) => {
-                    const payload = {
-                        userId: result.insertId,
-                        username: data.username,
-                        name: data.name,
-                        surname: data.surname,
-                        email: data.email,
-                        idPost: data.idPost
-                    }
-                    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
-                    console.log(accessToken);
+            try {
+                event.eventName = data.eventName;
+                event.eventDescription = data.eventDescription;
+                event.eventDate = data.eventDate;
+                event.publishedDate = data.eventPublishedDate;
+                event.eventStatus = data.eventState;
+                event.idPublisher = data.idPublisher;
+                event.imgPortada = data.imgPortada;
+                await event.save().then((result) => {
                     res.status(200).json({
                         status: 'success',
-                        result,
-                        accessToken
-                    });
+                        result
+                    })
                 });
-            } else {
+            } catch (error) {
                 res.status(500).json({
-                    status: 'error'
+                    status: 'error',
+                    error
                 });
             }
+
         } catch (error) {
             next(error);
         }
     }
-);
+)
 
-router.post('/login',
-    validatorHandler(loginSchema, 'body'),
+router.delete('/delete_event',
+    jwtMiddleware,
+    validatorHandler(requiredIdEventSchema, 'body'),
     async (req, res, next) => {
+        const { id } = req.body;
         try {
-            const { username, password } = req.body;
-
-            const user = await User.findOne({
+            const event = await Events.findOne({
+                attributes: [
+                    'idEvent'
+                ],
                 where: {
-                    username: username,
-                    state: 1
+                    idEvent: id
                 }
             });
-
-            if (!user || user.state === 0) {
+            if (!event) {
                 throw boom.unauthorized();
             }
 
-            const isMatch = await comparePassword(password, user.password);
-
-            if (!isMatch) {
-                throw boom.unauthorized();
-            }
-
-            const payload = {
-                idUser: user.id,
-                username: user.username,
-                name: user.name,
-                surname: user.surname,
-                email: user.email,
-                idPost: user.idPost,
-                state: user.state
-            }
-
-            const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2h' });
-            delete user.password;
-
-            res.status(200).json({
-                user,
-                accessToken
+            await Events.destroy({
+                where: {
+                    idEvent: id,
+                }
+            }).then((result) => {
+                res.status(200).json({
+                    status: 'success',
+                    result
+                })
+            }).catch((error) => {
+                res.status(500).json({
+                    status: 'error',
+                    error
+                })
             });
 
         } catch (error) {
             next(error);
         }
     }
-);
-
-router.put('/update-pass');
-
-router.put('/refresh-token');
+)
 
 module.exports = router;
