@@ -37,8 +37,13 @@ const updateSchema = Joi.object({
     userState: state.required()
 });
 
+const updateStateSchema =  Joi.object({
+    id: id.required(),
+    userState: state.required()
+});
+
 const requiredIdSchema =  Joi.object({
     id: id.required()
 });
 
-module.exports = { userSignUpSchema, loginSchema, updateSchema, requiredIdSchema };
+module.exports = { userSignUpSchema, loginSchema, updateSchema, updateStateSchema, requiredIdSchema };

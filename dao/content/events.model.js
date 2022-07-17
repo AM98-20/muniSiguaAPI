@@ -43,7 +43,7 @@ const Events = db.define(
     },
 );
 //user-event relation
-Events.hasOne(Users, { foreignKey: 'idUser' });
-Users.belongsTo(Events, { foreignKey: 'idPublisher' });
+Events.belongsTo(Users, { foreignKey: 'idPublisher' });
+Users.hasOne(Events, { foreignKey: 'idPublisher' });
 
 module.exports = Events;

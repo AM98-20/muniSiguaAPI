@@ -5,7 +5,7 @@ const eventName = Joi.string();
 const eventDescription = Joi.string();
 const eventDate = Joi.date();
 const eventPusblishedDate = Joi.date();
-const eventState = Joi.string().valid('CNLD', 'FNLD', 'PRXM');
+const eventState = Joi.string().valid('Muy Pronto', 'Finalizado', 'Cancelado');
 const idPublisher = Joi.number();
 const imgPortada = Joi.string();
 

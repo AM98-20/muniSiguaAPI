@@ -40,10 +40,10 @@ router.get('/all_news',
     }
 );
 
-router.get('/one_news',
-    validatorHandler(requiredIdEventSchema, 'body'),
+router.get('/one_news/:id',
+    validatorHandler(requiredIdEventSchema, 'params'),
     async (req, res, next) => {
-        const { id } = req.body;
+        const { id } = req.params;
         try {
             const news = await News.findAll({
                 include: [{

@@ -29,15 +29,17 @@ router.post('/user-signup',
                 ],
                 where: {
                     [Op.or]: [
-                        { username: data.username }
+                        { username: data.username },
+                        { email: data.email }
                     ]
                 }
             });
             if (buscarUsuario) {
-                throw boom.unauthorized();
-            }
-
-            if (!buscarUsuario) {
+                res.status(409).json({
+                    status: 'error',
+                    result: 'Ya existe un registro vinculado a este usuario o correo.'
+                })
+            } else if (!buscarUsuario) {
                 const UsuarioNuevo = User.create({
                     username: data.username,
                     name: data.name,
@@ -47,16 +49,6 @@ router.post('/user-signup',
                     idPost: data.idPost,
                     state: data.state
                 }).then((result) => {
-                    const payload = {
-                        userId: result.insertId,
-                        username: data.username,
-                        name: data.name,
-                        surname: data.surname,
-                        email: data.email,
-                        idPost: data.idPost
-                    }
-                    const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '0.03h' });
-                    console.log(accessToken);
                     res.status(200).json({
                         status: 'success',
                         result,
@@ -93,7 +85,7 @@ router.post('/login',
             if (!user || user.state === 0) {
                 if (user) {
                     throw boom.forbidden();
-                }else{
+                } else {
                     throw boom.notAcceptable();
                 }
             }

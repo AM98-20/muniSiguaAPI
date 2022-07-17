@@ -3,7 +3,7 @@ require('dotenv').config();
 const router = require('express').Router();
 
 //validation
-const { updateSchema, requiredIdSchema } = require('../../../../schemas/auth.schema');
+const { updateSchema, updateStateSchema, requiredIdSchema } = require('../../../../schemas/auth.schema');
 const validatorHandler = require('../../../../middlewares/validator.handler');
 const { jwtMiddleware } = require('../../../../config/jwt.strategy');
 const boom = require('@hapi/boom');
@@ -12,8 +12,10 @@ const boom = require('@hapi/boom');
 const User = require('../../../../dao/user/user.model');
 const Posts = require('../../../../dao/user/post.model');
 
+//Utils
+const { Op } = require('sequelize');
+
 router.get('/all_users',
-    jwtMiddleware,
     async (req, res, next) => {
         try {
             const users = await User.findAll({
@@ -40,16 +42,36 @@ router.get('/all_users',
     }
 );
 
-router.get('/one_user',
-    jwtMiddleware,
-    validatorHandler(requiredIdSchema, 'body'),
+router.get('/all_posts',
     async (req, res, next) => {
-        const { id } = req.body;
+        try {
+            const posts = await Posts.findAll({
+                attributes: [
+                    'idPost', 'postDesc'
+                ]
+            });
+            if (!posts) {
+                throw boom.notAcceptable();
+            }
+
+            res.status(200).json({
+                posts
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+router.get('/one_user/:id',
+    validatorHandler(requiredIdSchema, 'params'),
+    async (req, res, next) => {
+        const { id } = req.params;
         try {
             const user = await User.findOne({
                 include: [{
                     model: Posts,
-                    attributes: ['postDesc']
+                    attributes: ['idPost', 'postDesc']
                 }
                 ],
                 attributes: [
@@ -88,7 +110,35 @@ router.put('/edit_user',
             });
 
             if (!users) {
-                throw boom.notAcceptable();
+                throw boom.notAcceptable('406 No se encontro el registro');
+            }
+
+            const userExists = await User.findOne({
+                attributes: [
+                    'username'
+                ],
+                where: {
+                    username: data.username,
+                    idUser: { [Op.ne]: data.id }
+                }
+            });
+
+            if (userExists) {
+                throw boom.conflict('El usuario ya existe');
+            }
+
+            const emailExists = await User.findOne({
+                attributes: [
+                    'email'
+                ],
+                where: {
+                    email: data.email,
+                    idUser: { [Op.ne]: data.id }
+                }
+            });
+
+            if (emailExists) {
+                throw boom.conflict('El correo ya existe');
             }
 
             try {
@@ -117,10 +167,51 @@ router.put('/edit_user',
     }
 )
 
-router.delete('/delete_user',
+router.put('/change_state',
     jwtMiddleware,
+    validatorHandler(updateStateSchema, 'body'),
     async (req, res, next) => {
-        const { id } = req.body;
+        const { id, userState } = req.body;
+        try {
+            const users = await User.findOne({
+                attributes: [
+                    'idUser'
+                ],
+                where: {
+                    idUser: id
+                }
+            });
+
+            if (!users) {
+                throw boom.notAcceptable('406 No se encontro el registro');
+            }
+
+            try {
+                users.state = userState;
+                await users.save().then((result) => {
+                    res.status(200).json({
+                        status: 'success',
+                        result
+                    })
+                });
+            } catch (error) {
+                res.status(500).json({
+                    status: 'error',
+                    error
+                });
+            }
+
+        } catch (error) {
+            next(error);
+        }
+    }
+)
+
+router.delete('/delete_user/:id',
+    jwtMiddleware,
+    validatorHandler(requiredIdSchema, 'params'),
+    async (req, res, next) => {
+        const { id } = req.params;
         try {
             const users = await User.findOne({
                 attributes: [
@@ -131,7 +222,7 @@ router.delete('/delete_user',
                 }
             });
             if (!users) {
-                throw boom.notAcceptable();
+                throw boom.notAcceptable('406 No se encontro el registro');
             }
 
             await User.destroy({

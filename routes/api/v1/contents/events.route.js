@@ -40,12 +40,12 @@ router.get('/all_events',
     }
 );
 
-router.get('/one_event',
-    validatorHandler(requiredIdEventSchema, 'body'),
+router.get('/one_event/:id',
+    validatorHandler(requiredIdEventSchema, 'params'),
     async (req, res, next) => {
-        const { id } = req.body;
+        const { id } = req.params;
         try {
-            const events = await Events.findAll({
+            const events = await Events.findOne({
                 include: [{
                     model: Users,
                     attributes: ['username', 'name', 'surname']
@@ -59,7 +59,7 @@ router.get('/one_event',
                 }]
             });
             if (!events) {
-                throw boom.notAcceptable();
+                throw boom.notAcceptable('No se encontro el registro');
             }
 
             res.status(200).json({
@@ -115,16 +115,14 @@ router.put('/edit_event',
             });
 
             if (!event) {
-                throw boom.notAcceptable();
+                throw boom.notAcceptable('No se encontro el registro');
             }
 
             try {
                 event.eventName = data.eventName;
                 event.eventDescription = data.eventDescription;
                 event.eventDate = data.eventDate;
-                event.publishedDate = data.eventPublishedDate;
                 event.eventStatus = data.eventState;
-                event.idPublisher = data.idPublisher;
                 event.imgPortada = data.imgPortada;
                 await event.save().then((result) => {
                     res.status(200).json({
@@ -145,11 +143,11 @@ router.put('/edit_event',
     }
 )
 
-router.delete('/delete_event',
+router.delete('/delete_event/:id',
     jwtMiddleware,
-    validatorHandler(requiredIdEventSchema, 'body'),
+    validatorHandler(requiredIdEventSchema, 'params'),
     async (req, res, next) => {
-        const { id } = req.body;
+        const { id } = req.params;
         try {
             const event = await Events.findOne({
                 attributes: [
