@@ -23,7 +23,7 @@ router.get('/all_news',
                 }
                 ],
                 attributes: [
-                    'idNews', 'newsName', 'newsDesc', 'newsDate', 'newsBody', 'idEditor', 'imgPortada'
+                    'idNews', 'newsName', 'newsDesc', 'newsDate', 'newsBody', 'idEditor', 'imgPortada', 'imgArray'
                 ]
             });
             if (!news) {
@@ -45,14 +45,14 @@ router.get('/one_news/:id',
     async (req, res, next) => {
         const { id } = req.params;
         try {
-            const news = await News.findAll({
+            const news = await News.findOne({
                 include: [{
                     model: Users,
                     attributes: ['username', 'name', 'surname']
                 }
                 ],
                 attributes: [
-                    'idNews', 'newsName', 'newsDesc', 'newsDate', 'newsBody', 'idEditor', 'imgPortada'
+                    'idNews', 'newsName', 'newsDesc', 'newsDate', 'newsBody', 'idEditor', 'imgPortada', 'imgArray'
                 ],
                 where: [{
                     idNews: id
@@ -67,6 +67,7 @@ router.get('/one_news/:id',
             });
 
         } catch (error) {
+            console.log(error);
             next(error);
         }
     }
@@ -85,7 +86,8 @@ router.post('/add_news',
                 newsBody: data.newsBody,
                 newsDate: data.newsDate,
                 idEditor: data.idEditor,
-                imgPortada: data.imgPortada
+                imgPortada: data.imgPortada,
+                imgArray: data.imgArray
             }).then((result) => {
                 res.status(200).json({
                     status: 'success',
@@ -114,16 +116,15 @@ router.put('/edit_news',
             });
 
             if (!news) {
-                throw boom.notAcceptable();
+                throw boom.notAcceptable("No se encontro el registro");
             }
 
             try {
                 news.newsName = data.newsName;
                 news.eventDesc = data.eventDesc;
                 news.newsBody = data.newsBody;
-                news.newsDate = data.newsDate;
-                news.idEditor = data.idEditor;
                 news.imgPortada = data.imgPortada;
+                news.imgArray = data.imgArray
                 await news.save().then((result) => {
                     res.status(200).json({
                         status: 'success',
@@ -131,6 +132,7 @@ router.put('/edit_news',
                     })
                 });
             } catch (error) {
+                console.log(error)
                 res.status(500).json({
                     status: 'error',
                     error

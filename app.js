@@ -9,8 +9,8 @@ const { logErrors, errorHandler, boomErrorHandler } = require('./middlewares/err
 const { passport } = require('./config/jwt.strategy');
 const cors = require('cors');
 
-const whiteList = (process.env.CORS_ORIGIN || 'http://localhost:3001').split(',');
-//console.log(whiteList);
+const whiteList = [process.env.CORS_ORIGIN, 'http://localhost:3001', 'http://127.0.0.1:3001'];
+console.log(whiteList);
 const corsOptions = {
   origin: (origin, callback) => {
     if (whiteList.indexOf(origin) !== -1) {

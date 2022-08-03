@@ -32,6 +32,16 @@ const News = db.define(
         imgPortada: {
             type: sequelize.STRING(100),
             allowNull: false
+        },
+        imgArray: {
+            type: sequelize.TEXT,
+            get: function () {
+                return JSON.parse(this.getDataValue('imgArray'));
+            },
+            set: function (value) {
+                this.setDataValue('imgArray', JSON.stringify(value));
+            },
+            allowNull: true
         }
     }, {
         tableName: "news",
@@ -39,7 +49,7 @@ const News = db.define(
     },
 );
 //user-event relation
-News.hasOne(Users, { foreignKey: 'idUser' });
-Users.belongsTo(News, { foreignKey: 'idEditor' });
+News.belongsTo(Users, { foreignKey: 'idEditor' });
+Users.hasMany(News, { foreignKey: 'idEditor' });
 
 module.exports = News;

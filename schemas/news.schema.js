@@ -7,6 +7,7 @@ const newsBody = Joi.string();
 const newsDate = Joi.date();
 const idEditor = Joi.number();
 const imgPortada = Joi.string();
+const imgArr = Joi.array();
 
 const generalString = Joi.string();
 
@@ -16,7 +17,8 @@ const createNewsSchema = Joi.object({
     newsBody: newsBody.required(),
     newsDate: newsDate.required(),
     idEditor: idEditor.required(),
-    imgPortada: imgPortada.required()
+    imgPortada: imgPortada.required(),
+    imgArray: imgArr
 });
 
 const requiredIdEventSchema = Joi.object({
@@ -28,7 +30,8 @@ const updateNewsSchema = Joi.object({
     newsName: newsName.required(),
     newsDesc: newsDesc.required(),
     newsBody: newsBody.required(),
-    imgPortada: imgPortada.required()
+    imgPortada: imgPortada.required(),
+    imgArray: imgArr
 });
 
 const searchSchema = Joi.object({
