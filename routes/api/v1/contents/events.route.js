@@ -1,6 +1,8 @@
 require('dotenv').config();
 
 const router = require('express').Router();
+const moment = require('moment');
+const { Op } = require('sequelize');
 
 //validation
 const { createEventSchema, updateEventSchema, requiredIdEventSchema } = require('../../../../schemas/events.schema');
@@ -25,6 +27,34 @@ router.get('/all_events',
                 attributes: [
                     'idEvent', 'eventName', 'eventDescription', 'eventDate', 'publishedDate', 'eventStatus', 'idPublisher', 'imgPortada'
                 ]
+            });
+            if (!events) {
+                throw boom.notAcceptable();
+            }
+
+            res.status(200).json({
+                events
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+);
+
+router.get('/all_events_prox',
+    async (req, res, next) => {
+        try {
+            const events = await Events.findAll({
+                attributes: [
+                    'idEvent', 'eventName', 'eventDescription', 'eventDate', 'publishedDate', 'eventStatus', 'idPublisher', 'imgPortada'
+                ],
+                where: {
+                    [Op.and]: [
+                        {eventDate: {[Op.lte]: moment().add(3,'months').toDate()}},
+                        {eventStatus: 'Muy Pronto'}
+                    ]
+                }
             });
             if (!events) {
                 throw boom.notAcceptable();

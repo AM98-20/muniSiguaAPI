@@ -121,7 +121,7 @@ router.put('/edit_news',
 
             try {
                 news.newsName = data.newsName;
-                news.eventDesc = data.eventDesc;
+                news.newsDesc = data.newsDesc;
                 news.newsBody = data.newsBody;
                 news.imgPortada = data.imgPortada;
                 news.imgArray = data.imgArray
